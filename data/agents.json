@@ -1,0 +1,122 @@
+[
+  {
+    "id": "a01",
+    "letter": "林",
+    "name": "林秋",
+    "age": 32,
+    "role": "村医",
+    "traits": ["温和", "完美主义", "压抑型焦虑"],
+    "location": "lao_song_plaza",
+    "background_short": "暮谷镇本地人,独自经营医工坊;夜里反复梦见一种没见过的药材组合。"
+  },
+  {
+    "id": "a02",
+    "letter": "杏",
+    "name": "阿杏",
+    "age": 24,
+    "role": "解药学徒",
+    "traits": ["开朗", "崇拜林秋", "近月不安"],
+    "location": "lao_song_plaza",
+    "background_short": "林秋的徒弟;手腕内侧有三道淡痕,月光下隐约发光。"
+  },
+  {
+    "id": "a03",
+    "letter": "纪",
+    "name": "早纪",
+    "age": 28,
+    "role": "协会驻村员",
+    "traits": ["观察力强", "克制", "考据癖"],
+    "location": "lao_song_plaza",
+    "background_short": "协会派驻,私下是'考据派'成员;发现寂塔档案差了 17 年。"
+  },
+  {
+    "id": "a04",
+    "letter": "艾",
+    "name": "艾琳",
+    "age": 26,
+    "role": "客居研究员",
+    "traits": ["阳光的伪装", "目的性强", "易冲动"],
+    "location": "lao_song_plaza",
+    "background_short": "协会派来的客居研究员,真实目的是寻找 30 年前在此地失踪的父亲。"
+  },
+  {
+    "id": "a05",
+    "letter": "砚",
+    "name": "沈砚",
+    "age": 55,
+    "role": "村长",
+    "traits": ["沉稳老派", "极强责任感", "三十年负重"],
+    "location": "lao_song_plaza",
+    "background_short": "在村四十余年;三十年前那次魔潮事件他和田柱都在场,至今未曾说破。"
+  },
+  {
+    "id": "a06",
+    "letter": "绫",
+    "name": "千绫",
+    "age": 35,
+    "role": "捕魔队队长",
+    "traits": ["严苛克己", "不擅情感", "深藏的柔软"],
+    "location": "north_frost_workshop",
+    "background_short": "东方海上邦国退伍军人;十年前来到暮谷镇,理由说不清。"
+  },
+  {
+    "id": "a07",
+    "letter": "拂",
+    "name": "苏拂",
+    "age": 40,
+    "role": "酒馆主",
+    "traits": ["嘴碎心软", "好奇", "心里有一杆很准的秤"],
+    "location": "lao_song_plaza",
+    "background_short": "酒馆是村里信息流通中心;丈夫五年前在魔潮中主动选择不被治愈。"
+  },
+  {
+    "id": "a08",
+    "letter": "九",
+    "name": "马九",
+    "age": 38,
+    "role": "跑商",
+    "traits": ["油滑但不坏", "话多有保留", "见过太多"],
+    "location": "lao_song_plaza",
+    "background_short": "暮谷镇与外界的联通者;上次出门发现西边小村已经空了。"
+  },
+  {
+    "id": "a09",
+    "letter": "柱",
+    "name": "田柱",
+    "age": 50,
+    "role": "铁匠",
+    "traits": ["豪放", "粗中有细", "三十年压抑"],
+    "location": "lao_song_plaza",
+    "background_short": "村里唯一的铁匠;正在打一把刀,刀柄刻着 30 年前一个女人的名字。"
+  },
+  {
+    "id": "a10",
+    "letter": "文",
+    "name": "文姐",
+    "age": 45,
+    "role": "草药园主",
+    "traits": ["沉默", "坚韧", "心里有海"],
+    "location": "warm_valley_farm",
+    "background_short": "暖谷农场主理者;最近反复梦见已故的孩子站在中央广场。"
+  },
+  {
+    "id": "a11",
+    "letter": "璎",
+    "name": "小璎",
+    "age": 19,
+    "role": "捕魔队新人",
+    "traits": ["活泼", "渴望被认可", "心思未明"],
+    "location": "north_frost_workshop",
+    "background_short": "千绫的徒弟;走路有数台阶的怪习惯,最近梦见自己也在做梦的人群里。"
+  },
+  {
+    "id": "a12",
+    "letter": "嬤",
+    "name": "白嬤",
+    "age": 73,
+    "role": "独居老人",
+    "traits": ["极简", "深不可测", "时间外的人"],
+    "location": "lao_song_plaza",
+    "background_short": "在村至少 50 年;每年大魔潮临近会捡落叶进陶罐——今年的陶罐快满了。"
+  }
+]
