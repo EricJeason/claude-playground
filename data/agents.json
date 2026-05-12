@@ -16,7 +16,7 @@
     "age": 24,
     "role": "解药学徒",
     "traits": ["开朗", "崇拜林秋", "近月不安"],
-    "location": "lao_song_plaza",
+    "location": "warm_valley_farm",
     "background_short": "林秋的徒弟;手腕内侧有三道淡痕,月光下隐约发光。"
   },
   {
@@ -36,7 +36,7 @@
     "age": 26,
     "role": "客居研究员",
     "traits": ["阳光的伪装", "目的性强", "易冲动"],
-    "location": "lao_song_plaza",
+    "location": "silent_tower_ruin",
     "background_short": "协会派来的客居研究员,真实目的是寻找 30 年前在此地失踪的父亲。"
   },
   {
@@ -66,7 +66,7 @@
     "age": 40,
     "role": "酒馆主",
     "traits": ["嘴碎心软", "好奇", "心里有一杆很准的秤"],
-    "location": "lao_song_plaza",
+    "location": "warm_valley_farm",
     "background_short": "酒馆是村里信息流通中心;丈夫五年前在魔潮中主动选择不被治愈。"
   },
   {
@@ -76,7 +76,7 @@
     "age": 38,
     "role": "跑商",
     "traits": ["油滑但不坏", "话多有保留", "见过太多"],
-    "location": "lao_song_plaza",
+    "location": "silent_tower_ruin",
     "background_short": "暮谷镇与外界的联通者;上次出门发现西边小村已经空了。"
   },
   {
@@ -86,7 +86,7 @@
     "age": 50,
     "role": "铁匠",
     "traits": ["豪放", "粗中有细", "三十年压抑"],
-    "location": "lao_song_plaza",
+    "location": "north_frost_workshop",
     "background_short": "村里唯一的铁匠;正在打一把刀,刀柄刻着 30 年前一个女人的名字。"
   },
   {
