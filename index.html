@@ -23,9 +23,17 @@
     <div id="root"></div>
   </div>
 
-  <!-- Order matters: storage -> data -> screens -> app -->
+  <!-- Order matters: libs -> components -> screens -> app -->
   <script type="text/babel" data-presets="env,react" src="js/lib/storage.js"></script>
   <script type="text/babel" data-presets="env,react" src="js/lib/data.js"></script>
+  <script type="text/babel" data-presets="env,react" src="js/lib/keyboard.js"></script>
+  <script type="text/babel" data-presets="env,react" src="js/lib/time.js"></script>
+  <script type="text/babel" data-presets="env,react" src="js/lib/toast.js"></script>
+  <script type="text/babel" data-presets="env,react" src="js/components/topbar.js"></script>
+  <script type="text/babel" data-presets="env,react" src="js/components/stage.js"></script>
+  <script type="text/babel" data-presets="env,react" src="js/components/npc_info_card.js"></script>
+  <script type="text/babel" data-presets="env,react" src="js/components/minimap.js"></script>
+  <script type="text/babel" data-presets="env,react" src="js/components/event_stream.js"></script>
   <script type="text/babel" data-presets="env,react" src="js/screens/s1.js"></script>
   <script type="text/babel" data-presets="env,react" src="js/screens/s1_5.js"></script>
   <script type="text/babel" data-presets="env,react" src="js/screens/s2.js"></script>

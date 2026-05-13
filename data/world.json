@@ -5,6 +5,24 @@
     { "id": "warm_valley_farm",     "name": "暖谷农场", "short": "WARM-VALE FARM" },
     { "id": "silent_tower_ruin",    "name": "寂塔遗迹", "short": "SILENT TOWER RUIN" }
   ],
+  "adjacency": {
+    "lao_song_plaza": [
+      { "dir": "north", "to": "north_frost_workshop" },
+      { "dir": "south", "to": "warm_valley_farm" },
+      { "dir": "east",  "to": "silent_tower_ruin" }
+    ],
+    "north_frost_workshop": [
+      { "dir": "south", "to": "lao_song_plaza" },
+      { "dir": "east",  "to": "silent_tower_ruin" }
+    ],
+    "warm_valley_farm": [
+      { "dir": "north", "to": "lao_song_plaza" }
+    ],
+    "silent_tower_ruin": [
+      { "dir": "west",  "to": "lao_song_plaza" },
+      { "dir": "north", "to": "north_frost_workshop" }
+    ]
+  },
   "time": { "realSecondsPerGameHour": 60 },
-  "version": "v0.1"
+  "version": "v0.2"
 }
