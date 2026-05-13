@@ -53,6 +53,7 @@ MV.storage = (function () {
       showArchiveMind:  false,
       debugInfo:        false,
       skipKeyCheck:     false,
+      llmLog:           false,
     },
   };
 
