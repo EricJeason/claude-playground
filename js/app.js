@@ -44,12 +44,50 @@ function GameProvider({ children }) {
     });
   }, []);
 
+  /* settings patch: shallow-merges into state.settings, persists, re-applies side effects. */
+  const updateSettings = useCallback((patch) => {
+    setState(prev => {
+      const merged = { ...prev.settings, ...patch };
+      if (patch && patch.dev) merged.dev = { ...prev.settings.dev, ...patch.dev };
+      MV.storage.set(MV.storage.KEYS.settings, merged);
+      applySettingsSideEffects(merged);
+      return { ...prev, settings: merged };
+    });
+  }, []);
+
+  const resetSettings = useCallback(() => {
+    const d = MV.storage.SETTINGS_DEFAULTS;
+    MV.storage.set(MV.storage.KEYS.settings, d);
+    applySettingsSideEffects(d);
+    setState(prev => ({ ...prev, settings: JSON.parse(JSON.stringify(d)) }));
+  }, []);
+
+  /* re-apply side effects on first mount (after reload) */
+  useEffect(() => { applySettingsSideEffects(state.settings); /* eslint-disable-next-line */}, []);
+
   const hasSaves = Array.isArray(state.saves) && state.saves.length > 0;
 
-  const value = useMemo(() => ({ ...state, hasSaves, update }),
-                        [state, hasSaves, update]);
+  const value = useMemo(
+    () => ({ ...state, hasSaves, update, updateSettings, resetSettings }),
+    [state, hasSaves, update, updateSettings, resetSettings],
+  );
 
   return <GameCtx.Provider value={value}>{children}</GameCtx.Provider>;
+}
+
+/* font-size, letterbox color, tempo: each maps to a CSS variable read by
+   either styles.css or time.js. */
+function applySettingsSideEffects(settings) {
+  const root = document.documentElement;
+  const body = document.body;
+
+  const fontMap = { small: "13px", medium: "15px", large: "17px" };
+  root.style.setProperty("--mv-font-size", fontMap[settings.fontSize] || fontMap.medium);
+
+  body.style.background = settings.letterboxColor === "brown" ? "#1a1815" : "#000000";
+
+  /* tempo: seconds-per-game-hour. time.js reads window.MV_TEMPO at every tick. */
+  window.MV_TEMPO = Number(settings.tempo) || 60;
 }
 
 /* ---------- Router ---------- */

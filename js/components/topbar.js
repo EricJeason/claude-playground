@@ -1,12 +1,11 @@
-/* S3 top status bar: pause + clock + nav buttons. */
+/* S3 top status bar: pause + clock + nav buttons.
+   Callbacks injected by S3; each button corresponds to an overlay or a stub. */
 window.MV = window.MV || {};
 MV.components = MV.components || {};
 
-MV.components.Topbar = function Topbar({ time, paused, onTogglePause }) {
+MV.components.Topbar = function Topbar(props) {
+  const { time, paused, onTogglePause, onSettings, onRelations, onMap } = props;
   const pct = Math.round(MV.time.hourProgress(time) * 100);
-
-  const navStub = (label, screenTag) => () =>
-    MV.toast.show(`${screenTag} 将在下个 PR 实装`);
 
   return (
     <header className="s3-topbar">
@@ -27,13 +26,13 @@ MV.components.Topbar = function Topbar({ time, paused, onTogglePause }) {
       </div>
 
       <div className="tb-right">
-        <button className="tb-btn" onClick={navStub("设置", "S10 设置面板")}>
+        <button className="tb-btn" onClick={onSettings}>
           ⚙ 设置 <span className="kb">⚙</span>
         </button>
-        <button className="tb-btn" onClick={navStub("关系网", "S5 关系网")}>
-          ※ 关系网 <span className="kb">R</span>
+        <button className="tb-btn" onClick={onRelations}>
+          ※ 关系网 <span className="kb">⇥</span>
         </button>
-        <button className="tb-btn" onClick={navStub("全镇", "S8 全屏地图")}>
+        <button className="tb-btn" onClick={onMap}>
           📍 全镇 <span className="kb">M</span>
         </button>
       </div>

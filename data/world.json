@@ -1,9 +1,25 @@
 {
   "locations": [
-    { "id": "lao_song_plaza",       "name": "老松广场", "short": "OLD-PINE SQUARE" },
-    { "id": "north_frost_workshop", "name": "北霜工坊", "short": "NORTHFROST FORGE" },
-    { "id": "warm_valley_farm",     "name": "暖谷农场", "short": "WARM-VALE FARM" },
-    { "id": "silent_tower_ruin",    "name": "寂塔遗迹", "short": "SILENT TOWER RUIN" }
+    {
+      "id": "lao_song_plaza", "name": "老松广场", "short": "OLD-PINE SQUARE",
+      "desc": "镇中心广场,老松树下的喷泉常年滴水,议事和市集都在这里。",
+      "icon": "⌂"
+    },
+    {
+      "id": "north_frost_workshop", "name": "北霜工坊", "short": "NORTHFROST FORGE",
+      "desc": "千绫的工坊与捕魔队驻地,铁炉昼夜不熄。",
+      "icon": "⚒"
+    },
+    {
+      "id": "warm_valley_farm", "name": "暖谷农场", "short": "WARM-VALE FARM",
+      "desc": "山谷南坡的牧场,铃声与羊群从清晨响到黄昏。",
+      "icon": "❀"
+    },
+    {
+      "id": "silent_tower_ruin", "name": "寂塔遗迹", "short": "SILENT TOWER RUIN",
+      "desc": "百年前倒塌的古塔,塔顶夜里偶尔有微光,无人敢上去。",
+      "icon": "▲"
+    }
   ],
   "adjacency": {
     "lao_song_plaza": [
