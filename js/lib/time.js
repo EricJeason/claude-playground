@@ -4,7 +4,13 @@
 window.MV = window.MV || {};
 
 MV.time = (function () {
-  const REAL_MS_PER_GAME_MINUTE = 1000;
+  /* Default real-seconds-per-game-hour. Overridable at runtime via window.MV_TEMPO
+     (written by applySettingsSideEffects in app.js whenever settings change). */
+  const DEFAULT_SECONDS_PER_HOUR = 60;
+  function currentMsPerMinute() {
+    const secondsPerHour = Number(window.MV_TEMPO) || DEFAULT_SECONDS_PER_HOUR;
+    return Math.max(50, (secondsPerHour * 1000) / 60); /* 50 ms hard floor */
+  }
   const INITIAL = { day: 1, hour: 8, minute: 0 };
 
   function advance({ day, hour, minute }, steps = 1) {
@@ -52,9 +58,10 @@ MV.time = (function () {
         lastRef.current = now;
         if (!pausedRef.current) {
           accumRef.current += dt;
-          if (accumRef.current >= REAL_MS_PER_GAME_MINUTE) {
-            const steps = Math.floor(accumRef.current / REAL_MS_PER_GAME_MINUTE);
-            accumRef.current -= steps * REAL_MS_PER_GAME_MINUTE;
+          const msPerMin = currentMsPerMinute();
+          if (accumRef.current >= msPerMin) {
+            const steps = Math.floor(accumRef.current / msPerMin);
+            accumRef.current -= steps * msPerMin;
             setT(prev => advance(prev, steps));
           }
         }

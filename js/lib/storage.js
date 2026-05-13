@@ -42,6 +42,29 @@ MV.storage = (function () {
     settings:      "mv_settings",
   };
 
+  const SETTINGS_DEFAULTS = {
+    tempo:           60,         // real seconds per game hour
+    autoPause:       true,       // auto-pause when idle (UI only in v0.3)
+    fontSize:        "medium",   // small | medium | large
+    letterboxColor:  "brown",    // black | brown
+    theme:           "paper",    // only one allowed in v0.3
+    dev: {
+      teleport:         false,
+      showArchiveMind:  false,
+      debugInfo:        false,
+      skipKeyCheck:     false,
+    },
+  };
+
+  function mergeSettings(stored) {
+    const s = stored && typeof stored === "object" ? stored : {};
+    return {
+      ...SETTINGS_DEFAULTS,
+      ...s,
+      dev: { ...SETTINGS_DEFAULTS.dev, ...(s.dev || {}) },
+    };
+  }
+
   const DEFAULTS = {
     apiKey:       "",
     apiChannel:   "openrouter",
@@ -50,7 +73,7 @@ MV.storage = (function () {
     viewMode:     "embody",
     playingAs:    "",
     saves:        [],
-    settings:     {},
+    settings:     SETTINGS_DEFAULTS,
   };
 
   function loadAll() {
@@ -62,9 +85,9 @@ MV.storage = (function () {
       viewMode:     get(KEYS.viewMode,    DEFAULTS.viewMode),
       playingAs:    get(KEYS.playingAs,   DEFAULTS.playingAs),
       saves:        get(KEYS.saves,       DEFAULTS.saves),
-      settings:     get(KEYS.settings,    DEFAULTS.settings),
+      settings:     mergeSettings(get(KEYS.settings, DEFAULTS.settings)),
     };
   }
 
-  return { get, set, loadAll, KEYS, DEFAULTS };
+  return { get, set, loadAll, mergeSettings, KEYS, DEFAULTS, SETTINGS_DEFAULTS };
 })();

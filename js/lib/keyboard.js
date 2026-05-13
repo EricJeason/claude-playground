@@ -18,6 +18,9 @@ MV.keyboard = (function () {
     if (e.key === "ArrowRight") return "right";
     if (e.key === "Escape")     return "escape";
     if (e.key === " ")          return "space";
+    if (e.key === "Tab")        return "tab";
+    if (e.key === "Enter")      return "enter";
+    if (/^F\d+$/.test(e.key))   return e.key.toLowerCase();   /* F1 → 'f1' */
     if (e.key.length === 1)     return e.key.toLowerCase();
     return e.key;
   }
@@ -29,7 +32,8 @@ MV.keyboard = (function () {
     const k = norm(e);
     const gameKeys = new Set([
       "w","a","s","d","up","down","left","right",
-      "e","q","m","c","escape","f1",
+      "e","q","m","c","escape","tab","f1","f2","f12",
+      "1","2","3","4","5","6","7",
     ]);
     if (gameKeys.has(k)) e.preventDefault();
     if (held.has(k)) return;
