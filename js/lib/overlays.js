@@ -17,7 +17,7 @@ MV.session = MV.session || {
 };
 
 MV.overlays = (function () {
-  const KNOWN = new Set(["pause", "settings", "map", "saves", "help"]);
+  const KNOWN = new Set(["pause", "settings", "map", "saves", "help", "dialogue"]);
   let stack = [];
   const subs = new Set();
   function emit() { subs.forEach(fn => fn(stack.slice())); }
