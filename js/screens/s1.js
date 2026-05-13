@@ -1,27 +1,105 @@
-/* S1 · Startup. Two columns: LLM connect (left), perspective pick (right). */
+/* S1 · Startup. Two columns: LLM connect (left), perspective pick (right).
+   v0.4a additions:
+     - .led has four states (off / busy / ready / fail)
+     - API key auto-validates on blur (uses MV.llm.validateKey + 24h cache)
+     - "进入暮谷镇" gates on validation state + a confirm dialog for fail */
 window.MV = window.MV || {};
 
 MV.S1 = function S1() {
+  const { useState, useEffect, useCallback, useRef } = React;
   const game = MV.useGame();
   const {
-    apiKey, apiChannel, apiModel, nonThinking, viewMode, hasSaves, update,
+    apiKey, apiChannel, apiModel, nonThinking, viewMode, hasSaves, update, settings,
   } = game;
 
-  const canEnter = (apiKey || "").trim().length > 0 && !!viewMode;
+  /* validation status, with localStorage cache */
+  /* status: 'empty' | 'validating' | 'ready' | 'fail' */
+  const initialStatus = (() => {
+    if (!apiKey) return { status: "empty", reason: "" };
+    const cached = MV.llm.readCachedFor({ key: apiKey, channel: apiChannel, model: apiModel });
+    if (!cached) return { status: "empty", reason: "" };
+    return cached.ok ? { status: "ready", reason: "" } : { status: "fail", reason: cached.reason || "" };
+  })();
+  const [vstate, setVstate] = useState(initialStatus);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const aborterRef = useRef(null);
+
+  const skipKeyCheck = !!(settings && settings.dev && settings.dev.skipKeyCheck);
+
+  /* validation routine — debounced when triggered via blur or explicit call */
+  const runValidate = useCallback(async (k, ch, md) => {
+    if (!k) { setVstate({ status: "empty", reason: "" }); return; }
+    const cached = MV.llm.readCachedFor({ key: k, channel: ch, model: md });
+    if (cached) {
+      setVstate(cached.ok ? { status: "ready", reason: "" } : { status: "fail", reason: cached.reason || "" });
+      return;
+    }
+    setVstate({ status: "validating", reason: "" });
+    if (aborterRef.current) aborterRef.current.abort();
+    const ctrl = new AbortController();
+    aborterRef.current = ctrl;
+    const r = await MV.llm.validateKey(k, ch, md);
+    if (ctrl.signal.aborted) return;
+    MV.llm.saveCache({ key: k, channel: ch, model: md, ok: r.ok, reason: r.reason });
+    if (r.ok) setVstate({ status: "ready", reason: "" });
+    else      setVstate({ status: "fail", reason: r.reason || "" });
+  }, []);
+
+  /* if user pastes (sets apiKey programmatically) and didn't blur the input,
+     still kick a validation after a short idle. */
+  useEffect(() => {
+    if (!apiKey) { setVstate({ status: "empty", reason: "" }); return; }
+    const cached = MV.llm.readCachedFor({ key: apiKey, channel: apiChannel, model: apiModel });
+    if (cached) {
+      setVstate(cached.ok ? { status: "ready", reason: "" } : { status: "fail", reason: cached.reason || "" });
+    }
+    /* eslint-disable-next-line */
+  }, [apiKey, apiChannel, apiModel]);
 
   const onPaste = async () => {
     try {
       const text = await navigator.clipboard.readText();
       if (text) update({ apiKey: text.trim() });
-    } catch {
-      /* clipboard unavailable: silently ignore */
-    }
+    } catch {/* clipboard unavailable */}
   };
+  const onKeyBlur = () => runValidate(apiKey, apiChannel, apiModel);
 
-  const enter = () => {
-    if (!canEnter) return;
+  /* Footer LED rendering */
+  const ledClass = (() => {
+    if (vstate.status === "empty")      return "led off";
+    if (vstate.status === "validating") return "led led-busy";
+    if (vstate.status === "ready")      return "led";          /* default green pulse */
+    return "led led-fail";
+  })();
+  const ledText = (() => {
+    if (vstate.status === "empty")      return "$ 待接入";
+    if (vstate.status === "validating") return "$ 验证中...";
+    if (vstate.status === "ready")      return "$ 已就绪";
+    return "$ key 无效";
+  })();
+  const ledTitle = vstate.status === "fail" ? vstate.reason : "";
+
+  /* button gating */
+  const enterDisabled = (() => {
+    if (skipKeyCheck) return !viewMode;
+    if (vstate.status === "empty")      return true;
+    if (vstate.status === "validating") return true;
+    return !viewMode;
+  })();
+  const enterLabel = (() => {
+    if (!apiKey && !skipKeyCheck)       return "需要 API key";
+    if (vstate.status === "validating") return "验证中...";
+    return "进入暮谷镇 →";
+  })();
+
+  const proceed = () => {
     if (hasSaves) { MV.setHash("#/s1_5"); return; }
     MV.setHash(viewMode === "embody" ? "#/s2" : "#/s3");
+  };
+  const onEnter = () => {
+    if (enterDisabled) return;
+    if (!skipKeyCheck && vstate.status === "fail") { setConfirmOpen(true); return; }
+    proceed();
   };
 
   return (
@@ -74,6 +152,7 @@ MV.S1 = function S1() {
                 placeholder="sk-or-..."
                 value={apiKey}
                 onChange={e => update({ apiKey: e.target.value })}
+                onBlur={onKeyBlur}
                 autoComplete="off"
                 spellCheck="false"
               />
@@ -154,20 +233,39 @@ MV.S1 = function S1() {
 
       {/* ---------- Footer status ---------- */}
       <footer className="s1-footer">
-        <div className={"led" + (canEnter ? "" : " off")}>
-          <span>{canEnter ? "$ ready" : "$ waiting · key"}</span>
+        <div className={ledClass} title={ledTitle}>
+          <span>{ledText}</span>
         </div>
         <div className="row gap-3">
           <button className="btn ghost sm">设置</button>
           <button
-            className={"btn primary" + (canEnter ? "" : " disabled")}
-            disabled={!canEnter}
-            onClick={enter}
+            className={"btn primary" + (enterDisabled ? " disabled" : "")}
+            disabled={enterDisabled}
+            onClick={onEnter}
           >
-            进入暮谷镇 →
+            {enterLabel}
           </button>
         </div>
       </footer>
+
+      {confirmOpen && (
+        <div className="confirm-dialog">
+          <div className="box wide">
+            <div className="msg">
+              <strong>key 似乎无效</strong>
+              <br/>{vstate.reason || "请检查后重试"}
+              <br/><br/>
+              仍要继续进入吗?(仅作为 UI 测试,LLM 调用会失败)
+            </div>
+            <div className="actions">
+              <button className="btn sm" onClick={() => setConfirmOpen(false)}>返回检查</button>
+              <button className="btn sm primary" onClick={() => { setConfirmOpen(false); proceed(); }}>
+                继续测试
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
