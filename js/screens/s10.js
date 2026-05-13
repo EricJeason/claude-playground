@@ -140,6 +140,44 @@ MV.S10 = function S10() {
 
   const [editingKey, setEditingKey] = useState(false);
   const maskedKey = (game.apiKey || "") ? (game.apiKey.slice(0, 8) + " · · ·") : "(空)";
+
+  /* AI key validation status — mirrors S1's LED, smaller. Uses cache if any;
+     triggers a validate when the user finishes editing the key. */
+  const initialAiStatus = (() => {
+    if (!game.apiKey) return { status: "empty", reason: "" };
+    const cached = MV.llm.readCachedFor({ key: game.apiKey, channel: game.apiChannel, model: game.apiModel });
+    if (!cached) return { status: "empty", reason: "" };
+    return cached.ok ? { status: "ready", reason: "" } : { status: "fail", reason: cached.reason || "" };
+  })();
+  const [aiStatus, setAiStatus] = useState(initialAiStatus);
+  useEffect(() => {
+    /* refresh from cache when channel/model/key changes */
+    if (!game.apiKey) { setAiStatus({ status: "empty", reason: "" }); return; }
+    const c = MV.llm.readCachedFor({ key: game.apiKey, channel: game.apiChannel, model: game.apiModel });
+    if (c) setAiStatus(c.ok ? { status: "ready", reason: "" } : { status: "fail", reason: c.reason || "" });
+  }, [game.apiKey, game.apiChannel, game.apiModel]);
+
+  const revalidate = async () => {
+    if (!game.apiKey) return;
+    setAiStatus({ status: "validating", reason: "" });
+    const r = await MV.llm.validateKey(game.apiKey, game.apiChannel, game.apiModel);
+    MV.llm.saveCache({ key: game.apiKey, channel: game.apiChannel, model: game.apiModel, ok: r.ok, reason: r.reason });
+    setAiStatus(r.ok ? { status: "ready", reason: "" } : { status: "fail", reason: r.reason || "" });
+  };
+
+  const ledClass = (() => {
+    if (aiStatus.status === "empty")      return "led sm off";
+    if (aiStatus.status === "validating") return "led sm led-busy";
+    if (aiStatus.status === "ready")      return "led sm";
+    return "led sm led-fail";
+  })();
+  const ledText = (() => {
+    if (aiStatus.status === "empty")      return "未验证";
+    if (aiStatus.status === "validating") return "验证中…";
+    if (aiStatus.status === "ready")      return "已就绪";
+    return "无效";
+  })();
+
   const AiBody = () => (
     <>
       <div className="s10-row">
@@ -169,11 +207,12 @@ MV.S10 = function S10() {
                   spellCheck="false"
                 />
               </div>
-              <button className="btn sm" onClick={() => setEditingKey(false)}>完成</button>
+              <button className="btn sm" onClick={() => { setEditingKey(false); revalidate(); }}>完成</button>
             </>
           ) : (
             <>
               <span className="mono" style={{ flex: "1 1 auto", fontSize: 12 }}>{maskedKey}</span>
+              <span className={ledClass} title={aiStatus.reason}><span>{ledText}</span></span>
               <button className="btn ghost sm" onClick={() => setEditingKey(true)}>编辑</button>
             </>
           )}
@@ -228,6 +267,13 @@ MV.S10 = function S10() {
         <span className="ctrl">
           <Toggle on={!!s.dev.skipKeyCheck} onChange={(v) => setDev({ skipKeyCheck: v })}/>
           <span className="hint">允许空 key 进入 S1</span>
+        </span>
+      </div>
+      <div className="s10-row">
+        <span className="label" style={{ flexBasis: 200 }}>LLM 调用日志</span>
+        <span className="ctrl">
+          <Toggle on={!!s.dev.llmLog} onChange={(v) => setDev({ llmLog: v })}/>
+          <span className="hint">在浏览器控制台打印每次 fetch 的 request/response</span>
         </span>
       </div>
     </>
