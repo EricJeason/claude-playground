@@ -9,9 +9,10 @@ MV.data = (function () {
     if (cache) return cache;
     if (pending) return pending;
     pending = (async () => {
+      const v = window.MV_BUILD ? `?v=${window.MV_BUILD}` : "";
       const [agents, world] = await Promise.all([
-        fetch("data/agents.json").then(r => r.json()),
-        fetch("data/world.json").then(r => r.json()),
+        fetch("data/agents.json" + v).then(r => r.json()),
+        fetch("data/world.json"  + v).then(r => r.json()),
       ]);
       cache = { agents, world };
       return cache;

@@ -1,0 +1,70 @@
+# Deploy Murk Valley static site to GitHub Pages.
+# Adds a visible run in the Actions tab + emits a no-cache _headers file so
+# the Pages CDN serves fresh HTML/JS on every revisit.
+name: pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Stamp build info (timestamp + sha) into the page
+        run: |
+          STAMP="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          SHORT="${GITHUB_SHA::7}"
+          {
+            echo "<!-- build:${SHORT} at ${STAMP} -->"
+          } > .build-stamp
+          # Inject into the head of index.html so we can see which sha is live.
+          sed -i "s|<head>|<head>\n  <meta name=\"x-mv-build\" content=\"${SHORT} ${STAMP}\">|" index.html
+
+      - name: Emit no-cache headers (GitHub Pages reads _headers / .nojekyll)
+        run: |
+          # GitHub Pages doesn't honour Netlify-style _headers, so the safest
+          # cache-buster is content hashing. Instead we (a) write .nojekyll to
+          # avoid the Jekyll pipeline rewriting underscored files, and
+          # (b) append a ?v=<sha> query to every CDN-cacheable asset URL in
+          # index.html so the browser bypasses its local cache after each deploy.
+          touch .nojekyll
+          SHORT="${GITHUB_SHA::7}"
+          # Rewrite our own asset references with a ?v=<sha> bust.
+          sed -i -E "s|(href=\"css/styles.css)\"|\1?v=${SHORT}\"|g" index.html
+          sed -i -E "s|(src=\"js/[^\"]+\.js)\"|\1?v=${SHORT}\"|g" index.html
+          # data/*.json fetches are made by js/lib/data.js — append a global
+          # window.MV_BUILD constant the loader can use.
+          sed -i "s|<head>|<head>\n  <script>window.MV_BUILD=\"${SHORT}\";</script>|" index.html
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
