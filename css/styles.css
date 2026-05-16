@@ -244,6 +244,8 @@ label.check {
 }
 
 /* ---------- led (status indicator) ---------- */
+/* States: default (green, pulses), .off (gray, still), .led-busy (blue,
+   pulses), .led-fail (red, still). Used by the S1 / S10 key indicator. */
 .led {
   display: inline-flex;
   align-items: center;
@@ -261,10 +263,18 @@ label.check {
   box-shadow: 0 0 0 0 rgba(91, 122, 63, 0.5);
   animation: pulse-green 1.6s ease-in-out infinite;
 }
-.led.off::before { background: var(--ink-4); animation: none; }
+.led.off::before        { background: var(--ink-4);     animation: none; }
+.led.led-busy::before   { background: var(--accent-blue); animation: pulse-blue 1.6s ease-in-out infinite; }
+.led.led-fail::before   { background: var(--warn-red);  animation: none; }
+.led.sm                 { font-size: 10px; }
+.led.sm::before         { width: 6px; height: 6px; }
 @keyframes pulse-green {
   0%, 100% { box-shadow: 0 0 0 0   rgba(91, 122, 63, 0.55); }
   50%      { box-shadow: 0 0 0 6px rgba(91, 122, 63, 0); }
+}
+@keyframes pulse-blue {
+  0%, 100% { box-shadow: 0 0 0 0   rgba(91, 116, 138, 0.55); }
+  50%      { box-shadow: 0 0 0 6px rgba(91, 116, 138, 0); }
 }
 
 /* ---------- placeholder line / hatch ---------- */
@@ -1676,3 +1686,391 @@ label.check {
   font-size: calc(var(--mv-font-size, 13px) * 0.93);
 }
 .s3-info .lines { font-size: var(--mv-font-size, 13px); }
+
+/* ============================================================
+   v0.4a · Dialogue (S11) + Mind drawer (S4) + bubble/chip/voice
+   ============================================================ */
+
+/* toast extensions */
+.toast.is-error { background: var(--warn-red); }
+.toast-msg      { flex: 1 1 auto; }
+.toast-action {
+  border: 1px solid rgba(244, 239, 231, 0.5);
+  background: transparent;
+  color: inherit;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: 'IBM Plex Mono', monospace;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+.toast-action:hover { background: rgba(244, 239, 231, 0.15); }
+.toast-host .toast { display: flex; align-items: center; gap: 8px; pointer-events: auto; }
+
+/* confirm dialog already styled in v0.3 (.confirm-dialog). Slight variant
+   for the "key invalid -- continue anyway?" case. */
+.confirm-dialog .box.wide { width: 380px; }
+
+/* ----- S11 dialogue ----- */
+.s11-root.ov-root  { background: rgba(26, 24, 21, 0.78); }
+.s11-full {
+  background: var(--paper);
+  display: flex;
+  flex-direction: column;
+}
+.s11-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--paper-3);
+  background: var(--paper-2);
+}
+.s11-head .who {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 18px;
+}
+.s11-head .meta {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--ink-3);
+  margin-left: 10px;
+}
+.s11-head .left, .s11-head .right { display: flex; align-items: center; gap: 10px; }
+
+.s11-scene {
+  height: 28%;
+  border-bottom: 1px dashed var(--ink-4);
+  background: var(--paper);
+  position: relative;
+  overflow: hidden;
+  background-image: repeating-linear-gradient(45deg, var(--ink-4) 0, var(--ink-4) 1px, transparent 1px, transparent 9px);
+  opacity: 0.95;
+}
+.s11-scene::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, rgba(244, 239, 231, 0.2), rgba(244, 239, 231, 0.85));
+  pointer-events: none;
+}
+.s11-scene .label {
+  position: absolute; top: 12px; left: 14px;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 18px;
+  color: var(--ink);
+  z-index: 2;
+}
+.s11-scene .label .en {
+  display: block;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: var(--ink-3);
+}
+.s11-scene .sprite { transform: translate(-50%, -50%) scale(0.85); pointer-events: none; }
+
+.s11-history {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 14px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.s11-input {
+  border-top: 1px dashed var(--ink-4);
+  padding: 12px 18px 14px;
+  background: var(--paper-2);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.s11-input .you-line {
+  display: flex; align-items: center; gap: 8px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 15px;
+}
+.s11-input .you-line .hint {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--ink-3);
+}
+.s11-input textarea {
+  width: 100%;
+  min-height: 56px;
+  max-height: 110px;
+  resize: vertical;
+  padding: 8px 10px;
+  border: 1.4px solid var(--ink-3);
+  border-radius: 6px;
+  font: inherit;
+  font-family: 'Kalam', cursive;
+  font-size: 15px;
+  color: var(--ink);
+  background: var(--paper);
+}
+.s11-input textarea:focus { outline: none; border-color: var(--ink); }
+.s11-input .send-hint {
+  text-align: right;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--ink-3);
+}
+.s11-suggests {
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+
+/* chat bubble */
+.bubble-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  max-width: 100%;
+}
+.bubble-row.is-me { flex-direction: row-reverse; }
+.bubble-row .av { flex: 0 0 auto; }
+.bubble-row .col { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.bubble-row .meta {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--ink-3);
+}
+.bubble-row.is-me .col { align-items: flex-end; }
+.bubble {
+  max-width: 540px;
+  padding: 4px 0;
+  font-family: 'Kalam', cursive;
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--ink);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.bubble.is-me { color: var(--ink); }
+.bubble.is-think {
+  color: var(--ink-3);
+  font-style: italic;
+}
+.bubble .dots {
+  display: inline-block;
+  letter-spacing: 0.3em;
+  animation: bubble-dots 1.4s steps(3) infinite;
+}
+@keyframes bubble-dots {
+  0%   { content: "."; }
+  33%  { content: ".."; }
+  66%  { content: "..."; }
+}
+.bubble-row .mood {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* suggest chip */
+.suggest-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 240px;
+  padding: 6px 24px 6px 10px;
+  border: 1.4px solid var(--ink-3);
+  border-radius: 999px;
+  background: var(--paper);
+  font-family: 'Kalam', cursive;
+  font-size: 13px;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.suggest-chip:hover { background: var(--paper-3); border-color: var(--ink); }
+.suggest-chip .text {
+  flex: 1 1 auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.suggest-chip .pencil {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px; height: 16px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--ink-3);
+}
+.suggest-chip .pencil:hover { color: var(--ink); background: var(--paper-3); }
+.suggest-chip.is-loading { opacity: 0.6; font-style: italic; }
+.suggest-chip.placeholder {
+  border-style: dashed; color: var(--ink-4); cursor: default;
+}
+
+/* ----- S4 mind drawer ----- */
+/* Lives inside .s3-root, slides in from the right. Time keeps running. */
+.s4-drawer {
+  position: absolute;
+  top: 60px;             /* below topbar */
+  right: 0;
+  bottom: 0;
+  width: 460px;
+  background: var(--paper);
+  border-left: var(--border-w) solid var(--ink-2);
+  box-shadow: -10px 0 24px rgba(0, 0, 0, 0.18);
+  z-index: 12;
+  display: flex;
+  flex-direction: column;
+  animation: s4-slide 0.22s ease-out;
+}
+@keyframes s4-slide {
+  from { transform: translateX(100%); opacity: 0.4; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+.s4-head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--paper-3);
+}
+.s4-head .col { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.s4-head .name {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 19px;
+}
+.s4-head .meta {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--ink-3);
+}
+.s4-mode {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-bottom: 1px dashed var(--ink-4);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--ink-3);
+}
+.s4-mode .chips { display: flex; gap: 6px; margin-left: auto; }
+.s4-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 14px 18px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.s4-sec .lbl {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--ink-3);
+  margin-bottom: 4px;
+}
+.s4-sec .val {
+  font-size: 13.5px;
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+.s4-sec .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.s4-foot {
+  padding: 10px 16px;
+  border-top: 1px dashed var(--ink-4);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--ink-3);
+}
+
+/* inner voice (used by S4) */
+.inner-voice {
+  border: 1.4px solid var(--accent-copper);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: rgba(160, 107, 58, 0.04);
+}
+.inner-voice .head {
+  display: flex; align-items: center; gap: 6px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--accent-copper);
+  margin-bottom: 6px;
+}
+.inner-voice .head .dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--accent-copper);
+  display: inline-block;
+}
+.inner-voice .head .dot.is-loading {
+  animation: breathe-copper 1.6s ease-in-out infinite;
+}
+.inner-voice .text {
+  font-family: 'Kalam', cursive;
+  font-style: italic;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--ink);
+  white-space: pre-wrap;
+}
+.inner-voice .text.is-loading { color: var(--ink-3); font-style: italic; }
+
+/* dev archive expandable block in s4 */
+.s4-archive {
+  border: 1px dashed var(--ink-4);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--paper-2);
+}
+.s4-archive .toggle-head {
+  display: flex; align-items: center; gap: 8px;
+  cursor: pointer;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: var(--ink-3);
+}
+.s4-archive .body { display: none; margin-top: 8px; }
+.s4-archive.is-open .body { display: block; }
+.s4-archive .warn {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--warn-red);
+  letter-spacing: 0.12em;
+  margin-bottom: 8px;
+}
+.s4-archive .item {
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.5;
+  padding: 3px 0;
+}
+.s4-archive .item .k {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--ink-3);
+  display: block;
+}
+
+/* small clean styling for the auto-validation tooltip on .led */
+.led[title]:hover { cursor: help; }

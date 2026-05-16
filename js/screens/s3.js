@@ -62,6 +62,7 @@ window.MV = window.MV || {};
     const [playerPos, setPlayerPos]       = useState(() => restoreOnMount?.playerPos || { x: 500, y: 350 });
     const [activeEdge, setActiveEdge]     = useState(null);
     const [fadeKey, setFadeKey]           = useState(0);
+    const [mindOpenFor, setMindOpenFor]   = useState(null);   /* npcId of the read-mind target */
     const [events, setEvents]             = useState(() => ([
       { id: nextEventId(), kind: "divider", text: "—— 新的一天 ——" },
     ]));
@@ -80,6 +81,7 @@ window.MV = window.MV || {};
     const edgesRef = useRef([]);
     const activeEdgeRef = useRef(null);
     const selectedIdRef = useRef(null);
+    const inRangeRef    = useRef(false);
     useEffect(() => { pausedRef.current = paused; },     [paused]);
     useEffect(() => { stageRectRef.current = stageRect; },[stageRect]);
     useEffect(() => { playerPosRef.current = playerPos; },[playerPos]);
@@ -279,18 +281,25 @@ window.MV = window.MV || {};
     MV.keyboard.useKeyDown("e", () => {
       if (!noOverlay) return;
       const edge = activeEdgeRef.current;
-      if (!edge) {
-        if (selectedIdRef.current) MV.toast.show("S11 对话 UI 将在下个 PR 实装");
+      if (edge) {
+        const target = edgesRef.current.find(x => x.dir === edge);
+        if (target) switchLocation(target.targetId);
         return;
       }
-      const target = edgesRef.current.find(x => x.dir === edge);
-      if (target) switchLocation(target.targetId);
+      /* no edge → if an NPC is selected and in range, open dialogue */
+      if (selectedIdRef.current && inRangeRef.current) {
+        openDialogue(selectedIdRef.current);
+      }
     }, [noOverlay]);
 
     MV.keyboard.useKeyDown("q", () => {
       if (!noOverlay) return;
       if (!selectedIdRef.current) return;
-      MV.toast.show("S4 读心抽屉将在下个 PR 实装");
+      if (!inRangeRef.current) {
+        MV.toast.show("靠近一些再试");
+        return;
+      }
+      toggleMindFor(selectedIdRef.current);
     }, [noOverlay]);
 
     MV.keyboard.useKeyDown("m",  () => { if (noOverlay) MV.overlays.push("map");  }, [noOverlay]);
@@ -324,6 +333,28 @@ window.MV = window.MV || {};
       if (!n) return false;
       return dist(playerPos, { x: n.x, y: n.y }) <= SELECT_RADIUS;
     }, [selectedAgent, npcs, playerPos]);
+    useEffect(() => { inRangeRef.current = inRange; }, [inRange]);
+
+    /* ---------- dialogue (S11) + mind drawer (S4) ---------- */
+    function openDialogue(npcId) {
+      MV.session.dialogueWith = npcId;
+      MV.overlays.push("dialogue");
+    }
+    function toggleMindFor(npcId) {
+      setMindOpenFor(prev => (prev === npcId ? null : npcId));
+    }
+    /* live distance to the mind target (for S4 auto-close on walk-away) */
+    const mindAgent = mindOpenFor ? MV.data.agentById(mindOpenFor) : null;
+    const mindDistance = useMemo(() => {
+      if (!mindAgent) return Infinity;
+      const n = npcs.find(x => x.agent.id === mindAgent.id);
+      if (!n) return Infinity;
+      return dist(playerPos, { x: n.x, y: n.y });
+    }, [mindAgent, npcs, playerPos]);
+    /* drop the mind drawer when the target leaves the current location */
+    useEffect(() => {
+      if (mindOpenFor && !npcs.find(x => x.agent.id === mindOpenFor)) setMindOpenFor(null);
+    }, [npcs, mindOpenFor]);
 
     const currentLocation = MV.data.locationById(locationId);
 
@@ -369,7 +400,17 @@ window.MV = window.MV || {};
               agent={selectedAgent}
               inRange={inRange}
               onClose={() => setSelectedId(null)}
+              onTalk={() => inRange && selectedAgent && openDialogue(selectedAgent.id)}
+              onRead={() => inRange && selectedAgent && toggleMindFor(selectedAgent.id)}
             />
+
+            {mindAgent && (
+              <MV.S4
+                npc={mindAgent}
+                distance={mindDistance}
+                onClose={() => setMindOpenFor(null)}
+              />
+            )}
           </MV.components.Stage>
 
           <MV.components.EventStream
@@ -380,12 +421,14 @@ window.MV = window.MV || {};
         </div>
 
         {/* Overlay stack: rendered above everything else. Topbar still
-            visible so the clock keeps reading "paused" — feels intentional. */}
+            visible so the clock keeps reading "paused" — feels intentional.
+            S4 mind drawer is NOT in the stack — see <MV.S4/> above. */}
         {overlayStack.includes("pause")    && <MV.S12 />}
         {overlayStack.includes("settings") && <MV.S10 />}
         {overlayStack.includes("map")      && <MV.S8  />}
         {overlayStack.includes("saves")    && <MV.S9  />}
         {overlayStack.includes("help")     && <MV.S14 />}
+        {overlayStack.includes("dialogue") && <MV.S11 />}
 
         <MV.toast.Host />
       </div>
